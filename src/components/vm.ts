@@ -4,13 +4,16 @@ import { OperatingSystem } from 'iland-sdk';
 import { IconLabelComponent } from './icon-label';
 import { CanvasEventService } from '../services/canvas-event-service';
 import { Subscription } from 'rxjs';
+import { VnicData } from '../notes/data-models';
 
 const SIZE_DELTA_ON_HOVER = 2;
 
 export interface VmData {
-  operatingSystem: OperatingSystem;
-  name: string;
   uuid: string;
+  name: string;
+  vapp_uuid: string;
+  operatingSystem: OperatingSystem;
+  vnics: Array<VnicData>;
 }
 
 /**
@@ -50,7 +53,7 @@ export class VmComponent extends paper.Group {
         undefined);
     self._label.position = new paper.Point(0, 0);
     self.addChild(self._label);
-    self.onMouseEnter = self.mouseEnter;
+    this.onMouseEnter = self.mouseEnter;
     self.onMouseLeave = self.mouseLeave;
     self.onMouseUp = self.mouseUp;
     this.canvasEvtSubscription = CanvasEventService.getObservable(this.project, 'mousedown').subscribe(evt => {
@@ -151,7 +154,7 @@ export class VmComponent extends paper.Group {
    */
   private mouseLeave(event: paper.MouseEvent): void {
     if (this.hovering) {
-      const result = this.hitTest(event.point);
+      const result = this._label.hitTest(this.globalToLocal(event.point));
       if (!result) {
         this.hovering = false;
         (this as any).tween({
@@ -181,7 +184,7 @@ export class VmComponent extends paper.Group {
   }
 
   /**
-   * Handler for the containting canvas mouse down event.
+   * Handler for the containing canvas mouse down event.
    * @param event {paper.MouseEvent}
    */
   private canvasMouseDown(event: paper.MouseEvent): void {

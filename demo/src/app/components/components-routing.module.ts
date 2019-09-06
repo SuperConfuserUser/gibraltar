@@ -2,8 +2,10 @@ import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ComponentsPageComponent } from './components-page/components-page.component';
 import { VmPageComponent } from './vm-page-component/vm-page.component';
+import { VappPageComponent } from './vapp-page-component/vapp-page.component';
 import { MiscPageComponent } from './misc-page-component/misc-page.component';
-
+import { AnimationPageComponent } from './animation-page-component/animation-page.component';
+import { SandboxPageComponent } from './sandbox-page-component/sandbox-page.component';
 const routes = [
   {
     path: '',
@@ -18,7 +20,16 @@ const routes = [
         path: 'vm', component: VmPageComponent
       },
       {
+        path: 'vapp', component: VappPageComponent
+      },
+      {
         path: 'misc', component: MiscPageComponent
+      },
+      {
+        path: 'animations', component: AnimationPageComponent
+      },
+      {
+        path: 'sandbox', component: SandboxPageComponent
       }
     ]
   },

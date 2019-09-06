@@ -1,7 +1,6 @@
 import * as paper from 'paper';
-import { LABEL_HORIZONTAL_PADDING } from '../constants/dimensions';
+import { LABEL_HORIZONTAL_PADDING, LABEL_HEIGHT } from '../constants/dimensions';
 
-const HEIGHT = 30;
 const TEXT_COLOR = '#FFFFFF';
 const TEXT_HOVER_COLOR = '#FFFFFF';
 const ACTIVE_TEXT_COLOR = '#252A3A';
@@ -12,6 +11,7 @@ export const VERTICAL_PADDING_TOP = 6;
 export const FONT_SIZE = 13;
 const LINE_HEIGHT = 15;
 const DEFAULT_MAX_LABEL_WIDTH = 200;
+const FONT_FAMILY = 'Roboto';
 
 /**
  * LabelComponent Visual Component.
@@ -32,9 +32,10 @@ export class LabelComponent extends paper.Group {
    * exceeded)
    */
   constructor(protected _text: string, protected _point: paper.Point = new paper.Point(0, 0),
-              protected maxWidth = DEFAULT_MAX_LABEL_WIDTH) {
+              protected _maxWidth = DEFAULT_MAX_LABEL_WIDTH) {
     super();
     this.applyMatrix = false;
+    this.pivot = new paper.Point(0, 0);
     this.position = _point;
     this._label = new paper.PointText(new paper.Point(LABEL_HORIZONTAL_PADDING, VERTICAL_PADDING_TOP +
         FONT_SIZE));
@@ -44,10 +45,11 @@ export class LabelComponent extends paper.Group {
     this._label.fontSize = FONT_SIZE;
     this._label.leading = LINE_HEIGHT;
     this._label.pivot = new paper.Point(0, 0);
+    this._label.fontFamily = FONT_FAMILY;
     this.clip();
     this._background = new paper.Path.Rectangle({
       rectangle: new paper.Rectangle(0, 0,
-          this._label.bounds.width + (LABEL_HORIZONTAL_PADDING * 2), HEIGHT),
+          this._label.bounds.width + (LABEL_HORIZONTAL_PADDING * 2), LABEL_HEIGHT),
       radius: 3
     });
     this._background.fillColor = BACKGROUND_COLOR;
@@ -71,6 +73,15 @@ export class LabelComponent extends paper.Group {
   }
 
   /**
+   * Set the label's maxWidth property and resize label and background.
+   */
+  setMaxWidth(length: number) {
+    this._maxWidth = length;
+    this.clip();
+    this._background.bounds.width = this._label.bounds.width + (LABEL_HORIZONTAL_PADDING * 2);
+  }
+
+  /**
    * Sets the label to its visual hover state.
    */
   setHover() {
@@ -87,7 +98,7 @@ export class LabelComponent extends paper.Group {
   }
 
   /**
-   * Sets the label to its visual active state;
+   * Sets the label to its visual activate state;
    */
   setActive() {
     this._label.fillColor = ACTIVE_TEXT_COLOR;
@@ -99,7 +110,7 @@ export class LabelComponent extends paper.Group {
    */
   private clip() {
     let clipped = false;
-    while (this._label.bounds.width > this.maxWidth) {
+    while (this._label.bounds.width > this._maxWidth) {
       clipped = true;
       this._label.content = this._label.content.substring(0, this._label.content.length - 1);
     }

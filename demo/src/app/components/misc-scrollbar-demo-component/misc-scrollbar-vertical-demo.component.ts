@@ -26,7 +26,7 @@ export class MiscScrollbarVerticalDemoComponent implements AfterViewInit {
     proj.activeLayer.applyMatrix = false;
     this.demo.backgroundColor = CANVAS_BACKGROUND_COLOR;
     const view = paper.view;
-    const canvas = this.demo.canvas.nativeElement;
+    const canvas = view.element;
     const VIEW_PADDING = 30;
 
     // create content
@@ -54,19 +54,19 @@ export class MiscScrollbarVerticalDemoComponent implements AfterViewInit {
     content.translate(new paper.Point(0, VIEW_PADDING));
 
     // create scrollbar
-    const scrollbar = new ScrollbarComponent(
-      { content: content, containerBounds: view.bounds, contentOffsetEnd: VIEW_PADDING },
-      new paper.Point(view.bounds.right - VIEW_PADDING - DEFAULT_SCROLLBAR_THICKNESS, VIEW_PADDING),
+    const scrollbar = new ScrollbarComponent({
+      content: content,
+      containerBounds: view.bounds,
+      contentOffsetEnd: VIEW_PADDING
+    },
+      new paper.Point(view.bounds.right - VIEW_PADDING, VIEW_PADDING),
       view.bounds.height - VIEW_PADDING * 2,
-      'vertical');
+      'vertical'
+    );
 
     // add scroll listening. paper doesn't have a wheel event handler
     canvas.onwheel = (event: WheelEvent) => {
       scrollbar.onScroll(event);
-    };
-    // paper tools are global, so specific tools need to be activated when a different view is active
-    view.onMouseEnter = () => {
-      scrollbar.activateDefaultTool();
     };
   }
 

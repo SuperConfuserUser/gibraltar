@@ -1,0 +1,109 @@
+// Entity
+export interface EntityJson {
+  name: string;
+  uuid: string;
+  deleted: boolean;
+  deleted_date: number | null;
+  updated_date: number;
+  company_id: string;
+}
+
+// VMs
+export interface VmJson extends EntityJson {
+  allocation_model: VdcAllocationModel;
+  cores_per_socket: number;
+  cpus_number: number;
+  created_date: number | null;
+  deployed: boolean;
+  description: string;
+  hardware_version: string;
+  inserted_media_name: string;
+  location_id: string;
+  media_inserted: boolean;
+  memory_size: number;
+  org_uuid: string;
+  os: OperatingSystem;
+  status: VmStatus;
+  storage_profiles: Array<string>;
+  vapp_uuid: string;
+  vcenter_href: string;
+  vcenter_instance_uuid: string;
+  vcenter_moref: string;
+  vcenter_name: string;
+  vcloud_href: string;
+  vdc_uuid: string;
+  vim_datastore_ref: string;
+  vm_local_id: string;
+  nested_hypervisor_enabled: boolean;
+}
+
+// vApp
+export interface VappJson extends EntityJson {
+  deployed: boolean;
+  status: VappStatus;
+  storage_profiles: Array<string>;
+  runtime_lease_in_seconds: number;
+  storage_lease_in_seconds: number;
+  runtime_expire: number | null;
+  storage_expire: number | null;
+  vdc_uuid: string;
+  org_uuid: string;
+  location_id: string;
+  description: string;
+  vcloud_href: string;
+  created_date: number;
+  is_expired: boolean;
+  allocation_model: VdcAllocationModel;
+}
+
+// add vAppNetwork
+export interface AddVappNetworkInitializationParamsJson {
+  name: string;
+  description: string;
+  deployed: boolean;
+  backward_compatibility_mode: boolean;
+  retain_net_info_across_deployments: boolean;
+  parent_network_uuid: string;
+  gateway_address: string;
+  network_mask: string;
+  primary_dns: string;
+  secondary_dns: string;
+  dns_suffix: string;
+  ip_ranges: Array<IpRangeJson>;
+}
+
+// vAppNetwork
+export interface VappNetworkJson extends AbstractNetworkJson {
+  vapp_uuid: string;
+  router_external_ip: string;
+}
+
+// AbstractNetwork
+export interface AbstractNetworkJson extends EntityJson {
+  location_id: string;
+  org_uuid: string;
+  vdc_uuid: string;
+  description: string;
+  primary_dns: string;
+  secondary_dns: string;
+  dns_suffix: string;
+  fence_mode: FenceModeType;
+  gateway: string;
+  netmask: string;
+  ip_ranges: Array<IpRangeJson>;
+  inherited: boolean;
+  parent_network_uuid: string | null;
+}
+
+// Vnic
+export interface VnicJson {
+  adapter_type: string;
+  ip_addressing_mode: VnicAddressMode;
+  is_connected: boolean;
+  deleted: boolean;
+  ip_address: string;
+  mac_address: string;
+  network_name: string;
+  is_primary: boolean;
+  vnic_id: number;
+}

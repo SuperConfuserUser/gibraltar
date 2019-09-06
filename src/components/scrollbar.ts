@@ -1,6 +1,7 @@
 import * as paper from 'paper';
 import { LIGHT_GREY, VAPP_BACKGROUND_COLOR } from '../constants/colors';
 import { DEFAULT_SCROLLBAR_THICKNESS } from '../constants/dimensions';
+import { Scroll } from '@angular/router';
 
 const MINIMUM_SCROLLBAR_LENGTH = 20;
 const DEFAULT_SCROLLBAR_COLOR = LIGHT_GREY;
@@ -55,6 +56,7 @@ class CustomEffects {
  * Scrollbar Visual Component.
  */
 export class ScrollbarComponent extends paper.Group {
+  static anyIsDragging: boolean = false;
   protected scrollbar: paper.Path;
   protected track: paper.Path;
   protected scrollAmount: number;
@@ -113,7 +115,11 @@ export class ScrollbarComponent extends paper.Group {
   constructor(readonly scrollable: Scrollable,
               private _point: paper.Point = new paper.Point(0, 0),
               readonly scrollTrackLength: number = 0,
-              private direction: ScrollbarDirection = 'horizontal') {
+              private direction: ScrollbarDirection = 'horizontal',
+              private container: paper.Item | paper.Group | paper.View = new paper.Path.Rectangle(
+                new paper.Point(0, 0),
+                new paper.Size(0, 0)
+              )) {
     super();
     this.applyMatrix = false;
     this.position = this._point as paper.Point;
@@ -151,6 +157,49 @@ export class ScrollbarComponent extends paper.Group {
     this.onClick = this.trackClick;
     this.scrollbarDrag = this.scrollbarDragTool();
     this.arrowKeyDown = this.arrowKeyDownTool();
+
+    // display and activate on hover for views
+    this.visible = false;
+    if (this.isEnabled) {
+      // paper tools are global, so specific tools need to be activated when a different view is active
+      // using canvas instead of view handles issues with targeting the current view
+      const canvas = paper.view.element;
+
+      // TRY 1 w/ vapp NEW
+      canvas.onmouseenter = () => {
+        if (!ScrollbarComponent.anyIsDragging) {
+          this.activateDefaultTool();
+          this.visible = true;
+        }
+      };
+      canvas.onmouseleave = () => {
+        if (!ScrollbarComponent.anyIsDragging) {
+          this.visible = false;
+        }
+      };
+      // END TRY 1
+
+      // TRY 2 sort of working for now the vertical seems to get overridden by view container. hit tests?
+      // let containerHovering = false;
+      // (this.container as paper.Group).onMouseEnter = () => {
+      //   this.activateDefaultTool();
+      //   this.visible = true;
+      //   // containerHovering = true;
+      // };
+      //
+      // (this.container as paper.Group).onMouseLeave = () => {
+      //   this.visible = false;
+      //   // containerHovering = false;
+      //   paper.tools[paper.tools.length - 1].activate();
+      // };
+      //
+      // canvas.onwheel = (event: WheelEvent) => {
+      //   if (containerHovering) {
+      //     this.onScroll(event);
+      //   }
+      // };
+      // END TRY 2
+    }
   }
 
   /**
@@ -287,7 +336,7 @@ export class ScrollbarComponent extends paper.Group {
   }
 
   /**
-   * Enable scrollbar visibility and interactivity.
+   * Enable scrollbar component elements and interactivity.
    */
   private enable(): void {
     this.isEnabled = true;
@@ -295,7 +344,7 @@ export class ScrollbarComponent extends paper.Group {
   }
 
   /**
-   * Disable scrollbar visibility and interactivity.
+   * Disable scrollbar component elements and interactivity.
    */
   private disable(): void {
     this.isEnabled = false;
@@ -385,7 +434,9 @@ export class ScrollbarComponent extends paper.Group {
    * The proportionate length for the scrollbar. Based on viewable content size divided by the full content size.
    */
   private getProportionalLength(): number {
-    return (this.containerSize / this.contentSizeWithOffsets()) * this.scrollTrackLength;
+    const fullSize = this.contentSizeWithOffsets() + (this.scrollable.contentOffsetEnd || 0)
+      - (this.scrollable.contentOffsetStart || 0);
+    return this.containerSize / fullSize * this.scrollTrackLength;
   }
 
   /**
@@ -518,26 +569,40 @@ export class ScrollbarComponent extends paper.Group {
   /**
    * Tool that handles scrollbar on drag event.
    */
+  // FIXME: drag breaks when mouseover another item, even if they're children
+  //  enable scroll on items that are scrollable depending on mouseEvent target? or hitTestAll?
+  //  OR keep tool always enabled while dragging
   private scrollbarDragTool(): paper.Tool {
     const tool = new paper.Tool();
     let offsetPoint: paper.Point;
     tool.onMouseDown = (event) => {
       this.dragging = true;
+      ScrollbarComponent.anyIsDragging = true;
       this.project.view.element.style.cursor = 'grabbing';
       offsetPoint = new paper.Point(event.downPoint.subtract(this.scrollbar.position));
     };
-    tool.onMouseUp = () => {
+    tool.onMouseUp = (event: paper.ToolEvent) => {
       this.dragging = false;
+      ScrollbarComponent.anyIsDragging = false;
       this.project.view.element.style.cursor = this.hovering ? 'pointer' : 'default';
+      // set visibility based on if content is holding the current point
+      if (!this.scrollable.containerBounds.contains(event.point)) {
+        this.visible = false;
+        // TODO: less kludgey way of activating default tool. it's the last one created in the demo, but is a very
+        //  temp fix. more tools can be added in the future, so this index won't always be correct
+        paper.tools[paper.tools.length - 1].activate();
+        this.setNormal();
+      }
     };
     tool.onMouseDrag = (event: paper.ToolEvent) => {
       this.setActive();
+      this.visible = true;
       return this.isHorizontal
         ? this.changeScrollAndContentPosition(event.point.x - offsetPoint.x)
         : this.changeScrollAndContentPosition(event.point.y - offsetPoint.y);
     };
-    // arrowKeyDown tool is inactive while hovering on the scrollbar and scrollbarDrag is active. this handles keyDown
-    // events
+    // arrowKeyDown tool is inactive while hovering on the scrollbar and scrollbarDrag tool is active. this handles
+    // keyDown events
     tool.onKeyDown = (event) => {
       this.moveByKeyDown(event);
       this.activateDefaultTool();

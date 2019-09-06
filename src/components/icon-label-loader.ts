@@ -82,8 +82,7 @@ export class IconLabelLoaderComponent extends paper.Group {
           this._animationStage = 'NONE';
           setTimeout(() => {
             this._offset = 0;
-            this.drawRasterAnimation(this._offset);
-            this.visible = false;
+            this.drawRasterAnimation(this._offset);this.visible = false;
           });
           resolve();
         };
